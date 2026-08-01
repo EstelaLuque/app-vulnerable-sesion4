@@ -1,23 +1,13 @@
-from flask import Flask, request
-import sqlite3
+import ast
+import operator
 
-app = Flask(__name__)
-DB_PASSWORD = "admin123"  # Credencial hardcodeada (SAST)
-
-@app.route("/buscar")
-def buscar():
-    termino = request.args.get("q")
-    conexion = sqlite3.connect("datos.db")
-    # Inyeccion SQL intencional (SAST)
-    consulta = "SELECT * FROM productos WHERE nombre = '" + termino + "'"
-    resultado = conexion.execute(consulta)
-    return str(resultado.fetchall())
-
-@app.route("/calcular")
-def calcular():
-    expresion = request.args.get("expr")
-    # Uso inseguro de eval (SAST)
-    return str(eval(expresion))
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+def calcular_seguro(expr):
+    ops = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.Div: operator.truediv}
+    node = ast.parse(expr, mode='eval').body
+    def eval_(node):
+        if isinstance(node, ast.BinOp):
+            return ops[type(node.op)](eval_(node.left), eval_(node.right))
+        elif isinstance(node, ast.Num):
+            return node.n
+        raise TypeError(node)
+    return eval_(node)
