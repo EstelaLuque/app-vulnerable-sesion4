@@ -22,3 +22,11 @@ jobs:
           args: >
             -Dsonar.projectKey=EstelaLuque_app-vulnerable-sesion4
             -Dsonar.organization=estelaluque
+
+  sca:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
